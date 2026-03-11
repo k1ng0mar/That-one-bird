@@ -1,10 +1,38 @@
 # main.py — that one bird 🐦
+# Entry point: loads all cogs and starts the bot + Flask keep-alive for Render
+
 import sys
 import os
+import asyncio
 import aiosqlite
-from dotenv import load_dotenv
+from datetime import datetime, timezone
+import threading  # For background Flask thread
+
+# ── Flask keep-alive for Render Web Service (binds to $PORT) ──
+from flask import Flask
+
+flask_app = Flask(__name__)
+
+@flask_app.route('/')
+def home():
+    return "that one bird is alive! 🐦"
+
+def run_flask():
+    port = int(os.environ.get("PORT", 8080))  # Render provides PORT env var
+    flask_app.run(
+        host='0.0.0.0',          # Must be 0.0.0.0 for external access
+        port=port,
+        debug=False,
+        use_reloader=False       # Avoid double-run in dev
+    )
+
+# Start Flask in background BEFORE bot starts
+threading.Thread(target=run_flask, daemon=True).start()
+
+# ── Your original imports and code below ──────────────────────
 import discord
 from discord.ext import commands
+from dotenv import load_dotenv
 
 print("Python:", sys.version)
 load_dotenv()
