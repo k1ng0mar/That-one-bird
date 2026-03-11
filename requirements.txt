@@ -4,3 +4,4 @@ groq
 aiohttp
 aiosqlite
 Pillow
+flask
