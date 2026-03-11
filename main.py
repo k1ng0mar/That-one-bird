@@ -180,7 +180,7 @@ class Bird(commands.Bot):
             "cogs.info",
             "cogs.automod",
             "cogs.triggers",
-            "cogs.logging",
+            "cogs.modlog",
             "cogs.bloodtrials",
         ]
         for cog in cogs:
