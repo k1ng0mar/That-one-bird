@@ -6,7 +6,30 @@ import os
 import asyncio
 import aiosqlite
 from datetime import datetime, timezone
+import threading   # ← added for background thread
 
+# ── Flask keep-alive for Render Web Service ───────────────────
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "that one bird is alive! 🐦"
+
+def run_flask():
+    port = int(os.environ.get("PORT", 8080))  # Render sets PORT env var
+    app.run(
+        host='0.0.0.0',
+        port=port,
+        debug=False,
+        use_reloader=False
+    )
+
+# Start Flask server in a background thread
+threading.Thread(target=run_flask, daemon=True).start()
+
+# ── Rest of your original imports and code ────────────────────
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
