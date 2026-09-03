@@ -78,9 +78,6 @@ async def init_db():
                 starboard_channel_id  INTEGER,
                 starboard_emoji       TEXT    DEFAULT '⭐',
                 starboard_threshold   INTEGER DEFAULT 3,
-                chapter_channel_id    INTEGER,
-                chapter_role_id       INTEGER,
-                character_channel_id  INTEGER,
                 antiraid_enabled      INTEGER DEFAULT 0,
                 antiraid_threshold    INTEGER DEFAULT 10,
                 antiraid_seconds      INTEGER DEFAULT 10,
@@ -184,16 +181,6 @@ async def init_db():
                 silent    INTEGER DEFAULT 0,
                 PRIMARY KEY (guild_id, command)
             );
-            CREATE TABLE IF NOT EXISTS announced_chapters (
-                guild_id        INTEGER,
-                chapter_number  INTEGER,
-                PRIMARY KEY (guild_id, chapter_number)
-            );
-            CREATE TABLE IF NOT EXISTS announced_characters (
-                guild_id  INTEGER,
-                char_name TEXT,
-                PRIMARY KEY (guild_id, char_name)
-            );
             CREATE TABLE IF NOT EXISTS bookmarks (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id     INTEGER,
@@ -227,7 +214,6 @@ class Bird(commands.Bot):
     async def setup_hook(self):
         await init_db()
         cogs = [
-            "cogs.utils_cog",
             "cogs.settings",
             "cogs.moderation",
             "cogs.roles",
@@ -236,7 +222,6 @@ class Bird(commands.Bot):
             "cogs.automod",
             "cogs.triggers",
             "cogs.events",
-            "cogs.bloodtrials",
         ]
         for cog in cogs:
             try:

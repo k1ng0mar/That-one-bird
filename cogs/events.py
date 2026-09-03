@@ -1,7 +1,6 @@
 # cogs/events.py — SINGLE on_message hub + all event listeners
 # This is the only cog with on_message. All other cogs expose a process()
 # method that this cog calls. Eliminates all listener conflicts.
-import asyncio
 from datetime import datetime, timezone
 
 import aiosqlite
@@ -81,12 +80,6 @@ class Events(commands.Cog):
         # 6. Custom commands (prefix-based, alias system)
         await self._run_custom_command(message)
 
-        # 7. Groq chatbot — mention or #ai-chat
-        if (self.bot.user in message.mentions or
-                (hasattr(message.channel, 'name') and
-                 message.channel.name.lower() == "ai-chat")):
-            await self._groq_respond(message)
-
     # ── Custom command runner ─────────────────────────────────
     async def _run_custom_command(self, message: discord.Message):
         prefix = self.bot.prefix_cache.get(message.guild.id)
@@ -140,25 +133,6 @@ class Events(commands.Cog):
             new_ctx = await self.bot.get_context(ctx.message)
             if new_ctx.valid:
                 await self.bot.invoke(new_ctx)
-
-    # ── Groq response ─────────────────────────────────────────
-    async def _groq_respond(self, message: discord.Message):
-        fun_cog = self.bot.cogs.get("Fun")
-        if not fun_cog:
-            return
-        async with message.channel.typing():
-            try:
-                reply = await asyncio.to_thread(
-                    fun_cog.get_groq_response_fn,
-                    message.author.id,
-                    message.content
-                )
-                e = discord.Embed(description=reply[:4096], color=0x5865F2)
-                e.set_footer(text=f"Asked by {message.author.display_name}")
-                await message.reply(embed=e, mention_author=False)
-            except Exception as ex:
-                print(f"Groq on_message error: {ex}")
-                await message.reply("brain broke for a sec, try again")
 
     # ── Snipe cache ───────────────────────────────────────────
     @commands.Cog.listener()

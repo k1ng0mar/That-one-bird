@@ -68,11 +68,6 @@ class Settings(commands.Cog):
         e.add_field(name="⭐ Starboard",
                     value=f"Channel: {await ch('starboard_channel_id')}\n"
                           f"{sb_em} × {sb_th}", inline=True)
-        e.add_field(name="📖 Blood Trials",
-                    value=f"Chapters: {await ch('chapter_channel_id')} "
-                          f"(ping: {await ro('chapter_role_id')})\n"
-                          f"Characters: {await ch('character_channel_id')}",
-                    inline=False)
         e.add_field(name="🛡️ Automod",
                     value=f"{'✅' if am_on else '❌'} | Action: `{am_act}`", inline=True)
         e.add_field(name="🚨 Anti-Raid",
@@ -165,24 +160,6 @@ class Settings(commands.Cog):
         await set_setting(i.guild.id, 'starboard_threshold',  threshold)
         await i.response.send_message(
             f"✅ Starboard → {channel.mention} | {emoji} × {threshold}", ephemeral=True)
-
-    # ── Blood Trials ──────────────────────────────────────────
-    @app_commands.command(name="setchapterchannel", description="Channel for chapter announcements")
-    @app_commands.default_permissions(administrator=True)
-    async def setchapterchannel(self, i: discord.Interaction,
-                                channel: discord.TextChannel, role: discord.Role = None):
-        await set_setting(i.guild.id, 'chapter_channel_id', channel.id)
-        if role:
-            await set_setting(i.guild.id, 'chapter_role_id', role.id)
-        await i.response.send_message(
-            f"✅ Chapters → {channel.mention}" + (f" | Ping: {role.mention}" if role else ""),
-            ephemeral=True)
-
-    @app_commands.command(name="setcharacterchannel", description="Channel for character announcements")
-    @app_commands.default_permissions(administrator=True)
-    async def setcharacterchannel(self, i: discord.Interaction, channel: discord.TextChannel):
-        await set_setting(i.guild.id, 'character_channel_id', channel.id)
-        await i.response.send_message(f"✅ Characters → {channel.mention}", ephemeral=True)
 
     # ── Cooldowns ─────────────────────────────────────────────
     @app_commands.command(name="setcooldown", description="Override command cooldown in seconds")

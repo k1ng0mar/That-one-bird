@@ -107,7 +107,7 @@ class Info(commands.Cog):
         e.add_field(name="⚙️ Settings (admin)", inline=False, value=
             f"`/setup` · `/setprefix` · `/setlogchannel <mod|messages|members|server>`\n"
             f"`/setwelcome` · `/setautorole` · `/setjail` · `/setdeadchatrole` · `/setdeadchatperm`\n"
-            f"`/setstarboard` · `/setchapterchannel` · `/setcharacterchannel`\n"
+            f"`/setstarboard`\n"
             f"`/setcooldown` · `/setpermission` · `/setdisplay <public|ephemeral|timed>`\n"
             f"`/antiraidsettings` · `/antiraidtoggle` · `/setwarnthreshold <kick|ban|mute>`")
 
@@ -160,21 +160,17 @@ class Info(commands.Cog):
             f"React with the configured emoji (default ⭐) to star a message.\n"
             f"Reaches threshold → auto-posted with author ping + jump link.")
 
-        e.add_field(name="📖 Blood Trials", inline=False, value=
-            f"`/character <name>` · `{prefix}character <name>`\n"
-            f"Chapters + characters auto-announced when published in Supabase.")
-
         e.add_field(name="ℹ️ Info", inline=False, value=
             f"`userinfo [@member]` · `serverinfo` · `ping`")
 
         e.add_field(name="💡 Tips", inline=False, value=
             f"• Reply to a message before `{prefix}warn/kick/ban/mute` to auto-attach proof\n"
             f"• No need to @mention a target if you're replying to their message\n"
-            f"• Mention me or chat in `#ai-chat` to talk to Umar-bot (Groq)\n"
+
             f"• `/setdisplay` controls if any command response is public, ephemeral, or timed\n"
             f"• `/setwarnthreshold` controls auto-kick/ban/mute at warn counts")
 
-        e.set_footer(text="that one bird 🐦 · Powered by Groq")
+        e.set_footer(text="that one bird 🐦")
         return e
 
 async def setup(bot):

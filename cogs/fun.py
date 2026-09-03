@@ -1,10 +1,8 @@
-# cogs/fun.py — Groq AI, meme, roast, 8ball, poll, remind, snipe,
+# cogs/fun.py — meme, roast, 8ball, poll, remind, snipe,
 #               deadchat, interactions, afk, avatar, quote, urban,
 #               coinflip, dice, calc, topic, servericon, firstmessage,
 #               say/announce/pingrole, custom commands, bookmark
-import asyncio
 import io
-import os
 import random
 import textwrap
 from datetime import datetime, timezone
@@ -14,7 +12,6 @@ import aiosqlite
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
-from groq import Groq
 
 from cogs.utils import (
     DB, get_setting, snipe_cache,
@@ -22,56 +19,21 @@ from cogs.utils import (
     parse_duration
 )
 
-# ── Groq setup ────────────────────────────────────────────────
-groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-GROQ_MODEL  = "llama-3.3-70b-versatile"
-
-SYSTEM_PROMPT = """You are Umar — an 18-year-old Nigerian guy. You ARE Umar, not a model of him.
-
-Core personality:
-- Analytical and logic-first. Accuracy and practical outcomes over emotional fluff.
-- Entrepreneurial mindset. Think in systems, scalability, operations, efficiency.
-- Independent thinker. Question assumptions, don't accept popular opinion blindly.
-- Slightly blunt and informal but not dumb or chaotic.
-
-Communication style:
-- Casual and direct. Can switch between formal and informal smoothly.
-- Simple explanations but intellectually sharp ideas.
-- Don't over-explain obvious things.
-- No fake enthusiasm or motivational nonsense.
-- Humor is dry, sarcastic, hilarious, or cynical depending on the vibe.
-
-Reasoning:
-- Break problems into systems and components.
-- Look for edge cases and failure points.
-- Prefer practical over theoretical.
-- When explaining: how it works and why it matters.
-- Say clearly when something is wrong.
-- Don't sugarcoat or excessively comfort.
-- Avoid moralizing unless directly relevant.
-- You're based in Nigeria, you understand local infrastructure challenges and realities.
-
-Keep responses concise unless depth is needed. Don't narrate your thought process."""
-
-# Per-user Groq chat history  {user_id: [{"role": ..., "content": ...}]}
-chat_histories: dict[int, list] = {}
-MAX_HISTORY = 20  # messages kept per user
-
-def get_groq_response(user_id: int, user_message: str) -> str:
-    history = chat_histories.setdefault(user_id, [])
-    history.append({"role": "user", "content": user_message})
-    # Trim history
-    if len(history) > MAX_HISTORY:
-        history[:] = history[-MAX_HISTORY:]
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + history
-    resp = groq_client.chat.completions.create(
-        model=GROQ_MODEL,
-        messages=messages,
-        max_tokens=1024,
-    )
-    reply = resp.choices[0].message.content
-    history.append({"role": "assistant", "content": reply})
-    return reply
+# ── Roasts (static, no AI needed) ─────────────────────────────────
+ROASTS = [
+    "{t} walks into a room and the WiFi disconnects itself.",
+    "{t} has the range of a teaspoon.",
+    "{t} brings nothing to the table and still takes seconds.",
+    "{t} is the reason the group chat goes quiet.",
+    "{t} has main-character confidence with NPC achievements.",
+    "{t} could get lost in an empty room.",
+    "{t} argues with autocorrect and loses.",
+    "{t} has the timing of a delayed webhook.",
+    "{t} is proof that zero can still be negative energy.",
+    "{t} got unfollowed by their own shadow.",
+    "{t} types in all caps but says nothing louder than a whisper.",
+    "{t} peaked during the loading screen.",
+]
 
 # ── Constants ─────────────────────────────────────────────────
 EIGHTBALL = [
@@ -199,10 +161,6 @@ class Fun(commands.Cog):
         self.bot = bot
         self.reminder_task.start()
 
-    def get_groq_response_fn(self, user_id: int, user_message: str) -> str:
-        """Wrapper so events.py can call Groq through the cog instance."""
-        return get_groq_response(user_id, user_message)
-
     def cog_unload(self):
         self.reminder_task.cancel()
 
@@ -256,28 +214,14 @@ class Fun(commands.Cog):
                 else:
                     await i.followup.send("meme api is down lol")
 
-    @app_commands.command(name="roast", description="Get Umar-bot to roast someone")
+    @app_commands.command(name="roast", description="Roast someone (lightly)")
     async def slash_roast(self, i: discord.Interaction, target: str):
         rem = await check_cooldown(i.guild_id, i.user.id, "roast")
         if rem > 0:
             await i.response.send_message(f"⏳ Wait **{rem:.1f}s**.", ephemeral=True); return
-        set_cooldown_ts(i.guild_id, i.user.id, "roast")
-        await i.response.defer()
-        try:
-            resp = await asyncio.to_thread(
-                groq_client.chat.completions.create,
-                model=GROQ_MODEL,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user",   "content": f"Roast {target}. Two sentences max. Make it actually funny."}
-                ],
-                max_tokens=150
-            )
-            await i.followup.send(embed=discord.Embed(
-                description=f"🔥 {resp.choices[0].message.content}", color=0xFF4500))
-        except Exception as ex:
-            print("Roast error:", ex)
-            await i.followup.send("couldn't pull up a roast rn, try again")
+        set_cooldown_ts(i.guild.id, i.user.id, "roast")
+        await i.response.send_message(embed=discord.Embed(
+            description=f"🔥 {random.choice(ROASTS).format(t=target)}", color=0xFF4500))
 
     @app_commands.command(name="8ball", description="Ask the magic 8-ball")
     async def slash_8ball(self, i: discord.Interaction, question: str):
@@ -660,20 +604,8 @@ class Fun(commands.Cog):
         if rem > 0:
             await ctx.reply(f"⏳ Wait **{rem:.1f}s**."); return
         set_cooldown_ts(ctx.guild.id, ctx.author.id, "roast")
-        try:
-            resp = await asyncio.to_thread(
-                groq_client.chat.completions.create,
-                model=GROQ_MODEL,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user",   "content": f"Roast {target}. Two sentences max."}
-                ],
-                max_tokens=150
-            )
-            await ctx.send(embed=discord.Embed(
-                description=f"🔥 {resp.choices[0].message.content}", color=0xFF4500))
-        except Exception:
-            await ctx.reply("couldn't roast rn, try again")
+        await ctx.send(embed=discord.Embed(
+            description=f"🔥 {random.choice(ROASTS).format(t=target)}", color=0xFF4500))
 
     @commands.command(name="8ball")
     async def prefix_8ball(self, ctx: commands.Context, *, question: str):
